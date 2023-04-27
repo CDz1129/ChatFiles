@@ -2,7 +2,7 @@ import os
 import openai
 from langchain.chat_models import ChatOpenAI
 from llama_index import ComposableGraph, GPTListIndex, LLMPredictor, GPTSimpleVectorIndex, ServiceContext, \
-    SimpleDirectoryReader
+    SimpleDirectoryReader,GithubRepositoryReader
 
 from file import check_index_file_exists, get_index_filepath, get_name_with_json_extension
 from dotenv import load_dotenv
@@ -25,6 +25,23 @@ def create_index(filepath, index_name):
 
     index_name = get_name_with_json_extension(index_name)
     documents = SimpleDirectoryReader(input_files=[filepath]).load_data()
+    index = GPTSimpleVectorIndex.from_documents(documents)
+    index.save_to_disk(get_index_filepath(index_name))
+    return index
+
+def create_github_index(owner,repo, index_name):
+    index = get_index_by_index_name(index_name)
+    if index is not None:
+        return index
+
+    index_name = get_name_with_json_extension(index_name)
+    documents = GithubRepositoryReader(
+        owner=owner,
+        repo=repo,
+        use_parser=False,
+        verbose=True,
+        github_token="",
+        ignore_file_extensions=[".png", ".jpg",".pdf"]).load_data(branch="main")
     index = GPTSimpleVectorIndex.from_documents(documents)
     index.save_to_disk(get_index_filepath(index_name))
     return index

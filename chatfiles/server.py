@@ -3,7 +3,7 @@ import os
 
 from flask import Flask, request, make_response
 
-from chat import create_llama_index, get_answer_from_index, check_llama_index_exists, get_answer_from_graph, \
+from chat import create_llama_index, create_giturl_index, get_answer_from_index, check_llama_index_exists, get_answer_from_graph, \
     create_llama_graph_index
 
 from file import get_index_path, get_index_name_from_file_path, check_index_file_exists, \
@@ -51,6 +51,16 @@ def upload_file():
             os.remove(filepath)
         return "Error: {}".format(str(e)), 500
 
+@app.route('/github/create', methods=['POST'])
+def github_create():
+    try:
+        giturl = request.form.get('giturl')
+        # 解析 URL
+        index_name, index = create_giturl_index(giturl)
+        return make_response(
+            {"indexName": get_index_name_without_json_extension(index_name), "indexType": "index"}), 200
+    except Exception as e:
+        return "Error: {}".format(str(e)), 500
 
 @app.route('/query', methods=['GET'])
 def query_from_llama_index():
